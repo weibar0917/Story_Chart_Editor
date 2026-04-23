@@ -11,6 +11,7 @@ const selectedChapterId = ref<string | null>(null);
 const selectedNodeId = ref<string | null>(null);
 const showNodeEditor = ref(false);
 const chartEditorRef = ref<InstanceType<typeof StoryChartEditor> | null>(null);
+const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const selectedChapter = computed(() => {
   if (!selectedChapterId.value) return null;
@@ -72,6 +73,45 @@ function handleDeleteNode(nodeId: string) {
   }
 }
 
+function handleSaveStory() {
+  try {
+    const json = store.exportToJson();
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = window.document.createElement('a');
+    link.download = 'story-chart.json';
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('保存失败:', err);
+    alert('保存失败，请重试');
+  }
+}
+
+function handleLoadStoryClick() {
+  fileInputRef.value?.click();
+}
+
+async function handleLoadStoryChange(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  try {
+    const json = await file.text();
+    store.importFromJson(json);
+    selectedChapterId.value = store.state.chapters.length > 0 ? store.state.chapters[0].id : null;
+    selectedNodeId.value = null;
+    showNodeEditor.value = false;
+  } catch (err) {
+    console.error('读取失败:', err);
+    alert('读取失败：请确认文件是本编辑器导出的 JSON');
+  } finally {
+    input.value = '';
+  }
+}
+
 async function handleExportPNG() {
   if (!chartEditorRef.value) {
     alert('图表未加载');
@@ -112,10 +152,19 @@ function handleExportMarkdown() {
     <header class="app-header">
       <h1>📖 Story Chart - 多选择多结局剧情编辑器</h1>
       <div class="header-actions">
+        <button class="btn btn-secondary" @click="handleSaveStory">💾 保存剧情</button>
+        <button class="btn btn-secondary" @click="handleLoadStoryClick">📂 读取剧情</button>
         <button v-if="selectedChapter" class="btn btn-secondary" @click="handleExportPNG">📷 导出PNG</button>
         <button v-if="selectedChapter" class="btn btn-secondary" @click="handleExportMarkdown">📝 导出Markdown</button>
         <button class="btn btn-primary" @click="handleCreateChapter">+ 新建章节</button>
       </div>
+      <input
+        ref="fileInputRef"
+        type="file"
+        accept="application/json,.json"
+        style="display: none"
+        @change="handleLoadStoryChange"
+      />
     </header>
 
     <main class="main-container">

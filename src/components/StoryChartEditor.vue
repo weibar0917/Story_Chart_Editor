@@ -72,7 +72,7 @@ function updateDiagram() {
       'Vertical',
       {
         cursor: 'pointer',
-        click: (e: any, node: any) => {
+        click: (_e: any, node: any) => {
           const nodeId = node.data.key;
           const foundNode = props.chapter.nodes.find(n => n.id === nodeId);
           if (foundNode) {
@@ -129,7 +129,7 @@ function updateDiagram() {
       'Vertical',
       {
         cursor: 'pointer',
-        click: (e: any, node: any) => {
+        click: (_e: any, node: any) => {
           const nodeId = node.data.key;
           const foundNode = props.chapter.nodes.find(n => n.id === nodeId);
           if (foundNode) {

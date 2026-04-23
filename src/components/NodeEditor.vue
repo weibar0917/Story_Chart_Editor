@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
-import type { Chapter, StoryNode, StoryOption } from '../types';
+import type { Chapter, StoryNode } from '../types';
 import { useStoryStore } from '../store';
 
 const props = defineProps<{

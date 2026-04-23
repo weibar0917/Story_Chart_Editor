@@ -31,6 +31,78 @@ const state = reactive<StoryChart>({
 });
 
 export function useStoryStore() {
+  function exportToJson(): string {
+    return JSON.stringify(state, null, 2);
+  }
+
+  function importFromJson(json: string): void {
+    const data = JSON.parse(json) as Partial<StoryChart>;
+    const chapters = Array.isArray(data.chapters) ? data.chapters : [];
+
+    const normalizedChapters: Chapter[] = chapters
+      .map((rawChapter: any): Chapter | null => {
+        if (!rawChapter || typeof rawChapter !== 'object') return null;
+
+        const rawNodes = Array.isArray(rawChapter.nodes) ? rawChapter.nodes : [];
+        const nodes: StoryNode[] = rawNodes
+          .map((rawNode: any): StoryNode | null => {
+            if (!rawNode || typeof rawNode !== 'object') return null;
+
+            const nodeId = typeof rawNode.id === 'string' && rawNode.id.trim() ? rawNode.id : generateId();
+            const nodeType: StoryNode['type'] = rawNode.type === 'ending' ? 'ending' : 'story';
+            const nodeText = typeof rawNode.text === 'string' ? rawNode.text : '';
+            const rawOptions = Array.isArray(rawNode.options) ? rawNode.options : [];
+            const options: StoryOption[] = rawOptions
+              .map((rawOpt: any): StoryOption | null => {
+                if (!rawOpt || typeof rawOpt !== 'object') return null;
+                const optId = typeof rawOpt.id === 'string' && rawOpt.id.trim() ? rawOpt.id : generateId();
+                const optText = typeof rawOpt.text === 'string' ? rawOpt.text : '';
+                const nextNodeId =
+                  rawOpt.nextNodeId === null ? null : typeof rawOpt.nextNodeId === 'string' ? rawOpt.nextNodeId : null;
+                return { id: optId, text: optText, nextNodeId };
+              })
+              .filter((v: StoryOption | null): v is StoryOption => v !== null);
+
+            const position =
+              rawNode.position &&
+              typeof rawNode.position === 'object' &&
+              typeof rawNode.position.x === 'number' &&
+              typeof rawNode.position.y === 'number'
+                ? { x: rawNode.position.x, y: rawNode.position.y }
+                : undefined;
+
+            return { id: nodeId, type: nodeType, text: nodeText, options, position };
+          })
+          .filter((v: StoryNode | null): v is StoryNode => v !== null);
+
+        const nodeIdSet = new Set(nodes.map(n => n.id));
+        nodes.forEach(n => {
+          n.options.forEach(o => {
+            if (o.nextNodeId && !nodeIdSet.has(o.nextNodeId)) {
+              o.nextNodeId = null;
+            }
+          });
+        });
+
+        const chapterId = typeof rawChapter.id === 'string' && rawChapter.id.trim() ? rawChapter.id : generateId();
+        const title = typeof rawChapter.title === 'string' ? rawChapter.title : '未命名章节';
+        const description = typeof rawChapter.description === 'string' ? rawChapter.description : '';
+        const rootNodeId =
+          rawChapter.rootNodeId === null
+            ? null
+            : typeof rawChapter.rootNodeId === 'string' && nodeIdSet.has(rawChapter.rootNodeId)
+              ? rawChapter.rootNodeId
+              : nodes.length > 0
+                ? nodes[0].id
+                : null;
+
+        return { id: chapterId, title, description, nodes, rootNodeId };
+      })
+      .filter((v: Chapter | null): v is Chapter => v !== null);
+
+    state.chapters.splice(0, state.chapters.length, ...normalizedChapters);
+  }
+
   function createChapter(title: string = '新章节', description: string = ''): Chapter {
     const chapter: Chapter = {
       id: generateId(),
@@ -208,6 +280,7 @@ export function useStoryStore() {
     let md = `# ${chapter.title}\n\n${chapter.description}\n\n---\n\n`;
 
     function traverseNode(nodeId: string, depth: number = 0): void {
+      if (!chapter) return;
       const node = chapter.nodes.find(n => n.id === nodeId);
       if (!node) return;
 
@@ -235,6 +308,8 @@ export function useStoryStore() {
 
   return {
     state,
+    exportToJson,
+    importFromJson,
     createChapter,
     deleteChapter,
     getChapter,
