@@ -15,11 +15,14 @@ const emit = defineEmits<{
 
 const store = useStoryStore();
 
-const localText = ref(props.node.text);
-const localScene = ref(props.node.scene);
-const localType = ref(props.node.type);
+const currentChapter = computed(() => store.getChapter(props.chapter.id) ?? props.chapter);
+const currentNode = computed(() => store.getNode(props.chapter.id, props.node.id) ?? props.node);
 
-watch(() => props.node, (newNode) => {
+const localText = ref(currentNode.value.text);
+const localScene = ref(currentNode.value.scene);
+const localType = ref(currentNode.value.type);
+
+watch(currentNode, (newNode) => {
   localText.value = newNode.text;
   localScene.value = newNode.scene;
   localType.value = newNode.type;
@@ -34,28 +37,28 @@ watch([localText, localScene, localType], () => {
 });
 
 function handleAddOption() {
-  store.addOption(props.chapter.id, props.node.id);
+  store.addOption(currentChapter.value.id, currentNode.value.id);
 }
 
 function handleDeleteOption(optionId: string) {
-  store.deleteOption(props.chapter.id, props.node.id, optionId);
+  store.deleteOption(currentChapter.value.id, currentNode.value.id, optionId);
 }
 
 function handleOptionTextChange(optionId: string, text: string) {
-  const option = props.node.options.find(o => o.id === optionId);
+  const option = currentNode.value.options.find(o => o.id === optionId);
   if (option) {
-    store.updateOption(props.chapter.id, props.node.id, optionId, { text });
+    store.updateOption(currentChapter.value.id, currentNode.value.id, optionId, { text });
   }
 }
 
 function handleOptionLinkChange(optionId: string, nextNodeId: string) {
-  store.updateOption(props.chapter.id, props.node.id, optionId, {
+  store.updateOption(currentChapter.value.id, currentNode.value.id, optionId, {
     nextNodeId: nextNodeId || null
   });
 }
 
 const availableNodes = computed(() => {
-  return props.chapter.nodes.filter(n => n.id !== props.node.id);
+  return currentChapter.value.nodes.filter(n => n.id !== currentNode.value.id);
 });
 </script>
 
@@ -99,11 +102,11 @@ const availableNodes = computed(() => {
           <button class="btn-add-option" @click="handleAddOption">+ 添加选项</button>
         </div>
 
-        <div v-if="node.options.length === 0" class="no-options">
+        <div v-if="currentNode.options.length === 0" class="no-options">
           暂无选项，点击添加创建分支
         </div>
 
-        <div v-for="option in node.options" :key="option.id" class="option-item">
+        <div v-for="option in currentNode.options" :key="option.id" class="option-item">
           <div class="option-content">
             <input
               type="text"
