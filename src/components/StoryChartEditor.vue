@@ -16,6 +16,8 @@ const diagramDiv = ref<HTMLElement | null>(null);
 let diagram: any = null;
 let gojsModule: any = null;
 const NODE_WIDTH = 240;
+const STORY_ICON = '🎬';
+const ENDING_ICON = '🏁';
 
 async function initDiagram() {
   if (!diagramDiv.value) return;
@@ -108,7 +110,7 @@ function updateDiagram() {
                 fill: 'white'
               }
             ),
-            $(gojs.TextBlock, '📖',
+            $(gojs.TextBlock, STORY_ICON,
               {
                 font: '20px Microsoft YaHei',
                 stroke: '#667eea',
@@ -179,7 +181,7 @@ function updateDiagram() {
                 fill: 'white'
               }
             ),
-            $(gojs.TextBlock, '🌟',
+            $(gojs.TextBlock, ENDING_ICON,
               {
                 font: '20px Microsoft YaHei',
                 stroke: '#ed8936',
@@ -250,11 +252,16 @@ function updateDiagram() {
     );
 
     const model = new gojs.GraphLinksModel(nodeDataArray, linkDataArray);
+    model.nodeCategoryProperty = 'type';
     diagram.model = model;
   });
 }
 
 watch(() => props.chapter, () => {
+  updateDiagram();
+}, { deep: true });
+
+watch(() => props.chapter.nodes, () => {
   updateDiagram();
 }, { deep: true });
 
