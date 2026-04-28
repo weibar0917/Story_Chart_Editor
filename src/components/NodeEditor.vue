@@ -16,16 +16,19 @@ const emit = defineEmits<{
 const store = useStoryStore();
 
 const localText = ref(props.node.text);
+const localScene = ref(props.node.scene);
 const localType = ref(props.node.type);
 
 watch(() => props.node, (newNode) => {
   localText.value = newNode.text;
+  localScene.value = newNode.scene;
   localType.value = newNode.type;
 }, { immediate: true });
 
-watch([localText, localType], () => {
+watch([localText, localScene, localType], () => {
   emit('update', {
     text: localText.value,
+    scene: localScene.value,
     type: localType.value
   });
 });
@@ -79,6 +82,15 @@ const availableNodes = computed(() => {
           placeholder="输入剧情描述..."
           rows="4"
         ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>发生场景</label>
+        <input
+          v-model="localScene"
+          type="text"
+          placeholder="输入剧情发生的场景..."
+        />
       </div>
 
       <div v-if="localType === 'story'" class="options-section">

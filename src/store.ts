@@ -17,6 +17,7 @@ const defaultNode: StoryNode = {
   id: generateId(),
   type: 'story',
   text: '这是一个新的剧情节点...',
+  scene: '',
   options: []
 };
 
@@ -51,6 +52,7 @@ export function useStoryStore() {
             const nodeId = typeof rawNode.id === 'string' && rawNode.id.trim() ? rawNode.id : generateId();
             const nodeType: StoryNode['type'] = rawNode.type === 'ending' ? 'ending' : 'story';
             const nodeText = typeof rawNode.text === 'string' ? rawNode.text : '';
+            const nodeScene = typeof rawNode.scene === 'string' ? rawNode.scene : '';
             const rawOptions = Array.isArray(rawNode.options) ? rawNode.options : [];
             const options: StoryOption[] = rawOptions
               .map((rawOpt: any): StoryOption | null => {
@@ -71,7 +73,7 @@ export function useStoryStore() {
                 ? { x: rawNode.position.x, y: rawNode.position.y }
                 : undefined;
 
-            return { id: nodeId, type: nodeType, text: nodeText, options, position };
+            return { id: nodeId, type: nodeType, text: nodeText, scene: nodeScene, options, position };
           })
           .filter((v: StoryNode | null): v is StoryNode => v !== null);
 
@@ -141,6 +143,7 @@ export function useStoryStore() {
       id: generateId(),
       type: node.type || 'story',
       text: node.text || '新的剧情...',
+      scene: node.scene ?? '',
       options: [],
       position: node.position
     };
@@ -286,8 +289,10 @@ export function useStoryStore() {
 
       const indent = '  '.repeat(depth);
       const prefix = node.type === 'ending' ? '🌟' : '📖';
+      const scene = node.scene?.trim() || '未设置';
 
       md += `${indent}${prefix} ${node.text}\n\n`;
+      md += `${indent}场景：${scene}\n\n`;
 
       if (node.type !== 'ending' && node.options.length > 0) {
         node.options.forEach(opt => {

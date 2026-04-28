@@ -8,6 +8,7 @@ export interface StoryNode {
   id: string;
   type: 'story' | 'ending';
   text: string;
+  scene: string;
   options: StoryOption[];
   position?: { x: number; y: number };
 }

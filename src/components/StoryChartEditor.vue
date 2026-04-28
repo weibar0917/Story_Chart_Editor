@@ -15,6 +15,7 @@ const emit = defineEmits<{
 const diagramDiv = ref<HTMLElement | null>(null);
 let diagram: any = null;
 let gojsModule: any = null;
+const NODE_WIDTH = 240;
 
 async function initDiagram() {
   if (!diagramDiv.value) return;
@@ -51,6 +52,7 @@ function updateDiagram() {
     const nodeDataArray: any[] = props.chapter.nodes.map(node => ({
       key: node.id,
       text: node.text,
+      scene: node.scene || '未设置场景',
       type: node.type
     }));
 
@@ -80,47 +82,61 @@ function updateDiagram() {
           }
         }
       },
+      $(gojs.TextBlock, '剧情',
+        {
+          font: '13px Microsoft YaHei',
+          stroke: '#667eea',
+          margin: new gojs.Margin(0, 0, 6, 0)
+        }
+      ),
       $(gojs.Panel, 'Auto',
         $(gojs.Shape, 'RoundedRectangle',
           {
             fill: '#667eea',
             stroke: '#5a67d8',
-            strokeWidth: 2
+            strokeWidth: 2,
+            width: NODE_WIDTH
           }
         ),
         $(gojs.Panel, 'Horizontal',
           { padding: 12 },
-          $(gojs.Shape, 'Ellipse',
-            {
-              width: 32,
-              height: 32,
-              fill: 'white'
-            }
-          ),
-          $(gojs.TextBlock, '📖',
-            {
-              font: '24px Microsoft YaHei',
-              textAlign: 'center'
-            }
+          $(gojs.Panel, 'Auto',
+            $(gojs.Shape, 'Ellipse',
+              {
+                width: 32,
+                height: 32,
+                fill: 'white'
+              }
+            ),
+            $(gojs.TextBlock, '📖',
+              {
+                font: '20px Microsoft YaHei',
+                stroke: '#667eea',
+                textAlign: 'center',
+                verticalAlignment: gojs.Spot.Center
+              }
+            )
           ),
           $(gojs.TextBlock,
             {
               margin: 10,
               font: 'bold 16px Microsoft YaHei',
               stroke: 'white',
-              maxLines: 3,
+              width: NODE_WIDTH - 76,
+              maxLines: 2,
               overflow: gojs.TextBlock.OverflowEllipsis
             },
             new gojs.Binding('text', 'text')
           )
         )
       ),
-      $(gojs.TextBlock, '剧情',
+      $(gojs.TextBlock,
         {
           font: '13px Microsoft YaHei',
-          stroke: '#667eea',
+          stroke: '#4a5568',
           margin: new gojs.Margin(6, 0, 0, 0)
-        }
+        },
+        new gojs.Binding('text', 'scene')
       )
     );
 
@@ -137,47 +153,61 @@ function updateDiagram() {
           }
         }
       },
+      $(gojs.TextBlock, '结局',
+        {
+          font: '13px Microsoft YaHei',
+          stroke: '#ed8936',
+          margin: new gojs.Margin(0, 0, 6, 0)
+        }
+      ),
       $(gojs.Panel, 'Auto',
         $(gojs.Shape, 'RoundedRectangle',
           {
             fill: '#ed8936',
             stroke: '#dd6b20',
-            strokeWidth: 2
+            strokeWidth: 2,
+            width: NODE_WIDTH
           }
         ),
         $(gojs.Panel, 'Horizontal',
           { padding: 12 },
-          $(gojs.Shape, 'Ellipse',
-            {
-              width: 32,
-              height: 32,
-              fill: 'white'
-            }
-          ),
-          $(gojs.TextBlock, '🌟',
-            {
-              font: '24px Microsoft YaHei',
-              textAlign: 'center'
-            }
+          $(gojs.Panel, 'Auto',
+            $(gojs.Shape, 'Ellipse',
+              {
+                width: 32,
+                height: 32,
+                fill: 'white'
+              }
+            ),
+            $(gojs.TextBlock, '🌟',
+              {
+                font: '20px Microsoft YaHei',
+                stroke: '#ed8936',
+                textAlign: 'center',
+                verticalAlignment: gojs.Spot.Center
+              }
+            )
           ),
           $(gojs.TextBlock,
             {
               margin: 10,
               font: 'bold 16px Microsoft YaHei',
               stroke: 'white',
-              maxLines: 3,
+              width: NODE_WIDTH - 76,
+              maxLines: 2,
               overflow: gojs.TextBlock.OverflowEllipsis
             },
             new gojs.Binding('text', 'text')
           )
         )
       ),
-      $(gojs.TextBlock, '结局',
+      $(gojs.TextBlock,
         {
           font: '13px Microsoft YaHei',
-          stroke: '#ed8936',
+          stroke: '#4a5568',
           margin: new gojs.Margin(6, 0, 0, 0)
-        }
+        },
+        new gojs.Binding('text', 'scene')
       )
     );
 
