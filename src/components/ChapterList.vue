@@ -9,6 +9,7 @@ defineProps<{
 const emit = defineEmits<{
   select: [chapter: Chapter];
   delete: [chapterId: string];
+  update: [chapterId: string, updates: Partial<Pick<Chapter, 'title' | 'description'>>];
 }>();
 </script>
 
@@ -25,8 +26,27 @@ const emit = defineEmits<{
         :class="{ active: chapter.id === selectedId }"
         @click="emit('select', chapter)"
       >
-        <div class="chapter-title">{{ chapter.title }}</div>
-        <div class="chapter-desc">{{ chapter.description }}</div>
+        <template v-if="chapter.id === selectedId">
+          <input
+            class="chapter-title-input"
+            :value="chapter.title"
+            placeholder="请输入章节标题"
+            @click.stop
+            @input="emit('update', chapter.id, { title: ($event.target as HTMLInputElement).value })"
+          />
+          <textarea
+            class="chapter-desc-input"
+            :value="chapter.description"
+            placeholder="请输入章节描述"
+            rows="2"
+            @click.stop
+            @input="emit('update', chapter.id, { description: ($event.target as HTMLTextAreaElement).value })"
+          />
+        </template>
+        <template v-else>
+          <div class="chapter-title">{{ chapter.title }}</div>
+          <div class="chapter-desc">{{ chapter.description || '（暂无描述）' }}</div>
+        </template>
         <div class="chapter-meta">
           <span>{{ chapter.nodes.length }} 个节点</span>
           <button
@@ -97,6 +117,41 @@ const emit = defineEmits<{
   font-size: 12px;
   color: #666;
   margin-bottom: 8px;
+}
+
+.chapter-title-input {
+  width: 100%;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: white;
+  outline: none;
+}
+
+.chapter-title-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+}
+
+.chapter-desc-input {
+  width: 100%;
+  font-size: 12px;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: white;
+  outline: none;
+  resize: vertical;
+  margin-bottom: 8px;
+}
+
+.chapter-desc-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
 }
 
 .chapter-meta {

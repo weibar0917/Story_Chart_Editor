@@ -42,7 +42,7 @@ function handleNodeSelect(node: StoryNode) {
 }
 
 function handleCreateChapter() {
-  const chapter = store.createChapter('新章节', '点击添加描述...');
+  const chapter = store.createChapter('新章节', '');
   selectedChapterId.value = chapter.id;
   selectedNodeId.value = null;
   showNodeEditor.value = false;
@@ -174,6 +174,7 @@ function handleExportMarkdown() {
           :selectedId="selectedChapterId"
           @select="handleChapterSelect"
           @delete="handleDeleteChapter"
+          @update="(chapterId, updates) => store.updateChapter(chapterId, updates)"
         />
       </aside>
 
