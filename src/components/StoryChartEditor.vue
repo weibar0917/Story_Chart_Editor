@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import type { Chapter, StoryNode } from '../types';
 
 const props = defineProps<{
@@ -15,9 +15,12 @@ const emit = defineEmits<{
 const diagramDiv = ref<HTMLElement | null>(null);
 let diagram: any = null;
 let gojsModule: any = null;
+let pendingViewport: { position: any; scale: number } | null = null;
 const NODE_WIDTH = 240;
 const STORY_ICON = '🎬';
 const ENDING_ICON = '🏁';
+
+const DEFAULT_SCALE = 1;
 
 async function initDiagram() {
   if (!diagramDiv.value) return;
@@ -32,7 +35,7 @@ async function initDiagram() {
 
   diagram = $(gojs.Diagram, diagramDiv.value, {
     initialContentAlignment: gojs.Spot.Center,
-    initialScale: 2.0,
+    initialScale: DEFAULT_SCALE,
     layout: $(gojs.TreeLayout, {
       angle: 0,
       layerSpacing: 120,
@@ -40,6 +43,19 @@ async function initDiagram() {
     }),
     'draggingTool.isEnabled': true,
     'linkingTool.isEnabled': true
+  });
+
+  diagram.addDiagramListener('LayoutCompleted', () => {
+    if (!diagram || !pendingViewport) return;
+
+    const viewport = pendingViewport;
+    pendingViewport = null;
+
+    requestAnimationFrame(() => {
+      if (!diagram) return;
+      diagram.scale = viewport.scale;
+      diagram.position = viewport.position;
+    });
   });
 
   updateDiagram();
@@ -50,6 +66,12 @@ function updateDiagram() {
 
   import('gojs').then(gojs => {
     const $ = gojs.GraphObject.make;
+    pendingViewport = diagram.nodes.count > 0
+      ? {
+          position: diagram.position.copy(),
+          scale: diagram.scale
+        }
+      : null;
 
     const nodeDataArray: any[] = props.chapter.nodes.map(node => ({
       key: node.id,
@@ -63,6 +85,7 @@ function updateDiagram() {
       node.options.forEach(opt => {
         if (opt.nextNodeId) {
           linkDataArray.push({
+            key: opt.id,
             from: node.id,
             to: opt.nextNodeId,
             text: opt.text
@@ -251,19 +274,32 @@ function updateDiagram() {
       )
     );
 
-    const model = new gojs.GraphLinksModel(nodeDataArray, linkDataArray);
+    const model = new gojs.GraphLinksModel();
     model.nodeCategoryProperty = 'type';
+    model.linkKeyProperty = 'key';
+    model.nodeDataArray = nodeDataArray;
+    model.linkDataArray = linkDataArray;
     diagram.model = model;
   });
 }
 
-watch(() => props.chapter, () => {
-  updateDiagram();
-}, { deep: true });
+const chartSignature = computed(() => JSON.stringify(
+  props.chapter.nodes.map(node => ({
+    id: node.id,
+    type: node.type,
+    text: node.text,
+    scene: node.scene,
+    options: node.options.map(option => ({
+      id: option.id,
+      text: option.text,
+      nextNodeId: option.nextNodeId
+    }))
+  }))
+));
 
-watch(() => props.chapter.nodes, () => {
+watch(chartSignature, () => {
   updateDiagram();
-}, { deep: true });
+});
 
 onMounted(() => {
   initDiagram();
